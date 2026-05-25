@@ -38,6 +38,7 @@ bambustudio_add_cmake_project(Boost
     LIST_SEPARATOR |
     PATCH_COMMAND git apply --verbose --ignore-space-change --whitespace=fix ${CMAKE_CURRENT_LIST_DIR}/0001-FIX-OBS-cannot-start-streaming-on-MAC.patch
     CMAKE_ARGS
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         -DBOOST_EXCLUDE_LIBRARIES:STRING=contract|fiber|numpy|wave|test
         -DBOOST_LOCALE_ENABLE_ICU:BOOL=OFF # do not link to libicu, breaks compatibility between distros
         -DBUILD_TESTING:BOOL=OFF
