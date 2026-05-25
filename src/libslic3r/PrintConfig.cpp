@@ -8858,6 +8858,8 @@ void DynamicPrintConfig::update_non_diff_values_to_base_config(DynamicPrintConfi
             BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ << boost::format(" change key %1% from old_value %2% to inherit's value %3%")
                     %opt %(opt_src->serialize()) %(opt_target->serialize());
             if (different_keys.find(opt) == different_keys.end()) {
+                BOOST_LOG_TRIVIAL(warning) << __FUNCTION__ << boost::format(" overwriting %1%: project value \"%2%\" replaced by system preset value \"%3%\"")
+                        %opt %(opt_src->serialize()) %(opt_target->serialize());
                 opt_src->set(opt_target);
             }
             else {
