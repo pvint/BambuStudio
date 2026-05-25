@@ -2250,14 +2250,25 @@ std::pair<Preset*, bool> PresetCollection::load_external_preset(
     if (!inherits.empty() && (different_settings_list.size() > 0)) {
         auto iter = this->find_preset_internal(inherits);
         if (iter != m_presets.end() && iter->name == inherits) {
-            //std::vector<std::string> dirty_options = cfg.diff(iter->config);
             BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": change preset %1% inherit %2% 's value to %3% 's values")%original_name %inherits %path;
-            cfg.update_non_diff_values_to_base_config(iter->config, keys, different_settings_list, extruder_id_name, extruder_variant_name, *key_set1, *key_set2);
+            // Augment the saved different_settings list with every key that actually
+            // differs between the parent preset and the loaded combined_config.  This
+            // protects settings that were genuinely user-modified but were not
+            // recorded in different_settings_to_system (e.g. due to a tracking gap at
+            // save time, as seen with sparse_infill_pattern gyroid → grid regression).
+            std::set<std::string> effective_different_keys = different_settings_list;
+            for (const auto &key : iter->config.diff(combined_config))
+                effective_different_keys.insert(key);
+            cfg.update_non_diff_values_to_base_config(iter->config, keys, effective_different_keys, extruder_id_name, extruder_variant_name, *key_set1, *key_set2);
         }
     }
     else if (found && it->is_system && (different_settings_list.size() > 0)) {
         BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(": change preset %1% 's value to %2% 's values")%original_name %path;
-        cfg.update_non_diff_values_to_base_config(it->config, keys, different_settings_list, extruder_id_name, extruder_variant_name, *key_set1, *key_set2);
+        // Same augmentation for the direct system-preset match path.
+        std::set<std::string> effective_different_keys = different_settings_list;
+        for (const auto &key : it->config.diff(combined_config))
+            effective_different_keys.insert(key);
+        cfg.update_non_diff_values_to_base_config(it->config, keys, effective_different_keys, extruder_id_name, extruder_variant_name, *key_set1, *key_set2);
     }
 
     //BBS: add config related logs
