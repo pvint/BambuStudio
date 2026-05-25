@@ -27,6 +27,7 @@ bambustudio_add_cmake_project(wxWidgets
     GIT_REPOSITORY "https://github.com/bambulab/wxWidgets"
     GIT_TAG master
     DEPENDS ${PNG_PKG} ${ZLIB_PKG} ${EXPAT_PKG} ${TIFF_PKG} ${JPEG_PKG}
+    PATCH_COMMAND /usr/local/src/BambuStudio/deps/wxWidgets/fix-cmake.sh <SOURCE_DIR>
     CMAKE_ARGS
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         -DwxBUILD_PRECOMP=OFF
