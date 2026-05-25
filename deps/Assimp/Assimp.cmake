@@ -35,6 +35,7 @@ bambustudio_add_cmake_project(Assimp
     # identical in the two tags, so a single copy covers either branch above.
     PATCH_COMMAND git apply ${ASSIMP_DIRECTORY_FLAG} --verbose --ignore-space-change --whitespace=fix ${CMAKE_CURRENT_LIST_DIR}/0001-FBX-fix-negative-TypedIndex-OOB.patch ${CMAKE_CURRENT_LIST_DIR}/0002-glTF1-fix-index-accessor-type-confusion-OOB.patch
     CMAKE_ARGS
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         -DASSIMP_BUILD_TESTS=OFF
         -DASSIMP_BUILD_SAMPLES=OFF
         -DASSIMP_BUILD_ASSIMP_TOOLS=OFF
