@@ -1115,14 +1115,15 @@ wxSizer* CalibrationPresetPage::create_slot_items_sizer(wxPanel* slot_items_pane
 
 /*main radio and deputy radio is incompatible in manual cali mode*/
 void CalibrationPresetPage::manage_filament_radio_btn(ExtruderRole extuder_role){
+    // Activate the dummy to clear the other column's selection.
+    // On GTK, SetValue(false) on a single-visible-item radio group is a no-op;
+    // activating the hidden dummy transfers the selection away from visible buttons.
     if(extuder_role == ExtruderRole::MAIN_EXTRUDER) {
-        for(auto &fcb : m_deputy_filament_comboBox_list) {
-            fcb->GetRadioBox()->SetValue(false);
-        }
+        if (m_deputy_dummy_radio)
+            m_deputy_dummy_radio->SetValue(true);
     } else if(extuder_role == ExtruderRole::DEPUTY_EXTRUDER) {
-        for(auto &fcb : m_main_filament_comboBox_list) {
-            fcb->GetRadioBox()->SetValue(false);
-        }
+        if (m_main_dummy_radio)
+            m_main_dummy_radio->SetValue(true);
     }
 }
 
@@ -1151,7 +1152,12 @@ void CalibrationPresetPage::create_multi_extruder_filament_list_panel(wxWindow *
         m_main_ams_items_panel    = new wxPanel(m_main_filament_cali_panel);
         m_main_ams_items_panel->SetSizer(create_slot_items_sizer(m_main_ams_items_panel, m_main_filament_comboBox_list, ExtruderRole::MAIN_EXTRUDER));
 
-        // set default selelected
+        // Hidden dummy radio keeps the MAIN group valid on GTK so SetValue(true) on
+        // the dummy can clear all visible MAIN buttons without GTK fighting us.
+        m_main_dummy_radio = new wxRadioButton(m_main_ams_items_panel, wxID_ANY, "");
+        m_main_dummy_radio->Hide();
+
+        // set default selected
         m_main_filament_comboBox_list[0]->GetRadioBox()->SetValue(true);
 
         m_main_sizer->Add(m_main_ams_items_panel, 0, wxALL, 10);
@@ -1168,6 +1174,12 @@ void CalibrationPresetPage::create_multi_extruder_filament_list_panel(wxWindow *
         // 2. AMS item
         m_deputy_ams_items_panel = new wxPanel(m_deputy_filament_cali_panel);
         m_deputy_ams_items_panel->SetSizer(create_slot_items_sizer(m_deputy_ams_items_panel, m_deputy_filament_comboBox_list, ExtruderRole::DEPUTY_EXTRUDER));
+
+        // Hidden dummy for DEPUTY group — starts selected so Ext appears deselected initially.
+        m_deputy_dummy_radio = new wxRadioButton(m_deputy_ams_items_panel, wxID_ANY, "");
+        m_deputy_dummy_radio->Hide();
+        m_deputy_dummy_radio->SetValue(true);
+
         m_deputy_sizer->Add(m_deputy_ams_items_panel, 0, wxEXPAND | wxALL, 10);
     }
 

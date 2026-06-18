@@ -366,6 +366,9 @@ protected:
     std::vector<NozzleVolumeType> m_extruder_nozzle_types;
     bool                          m_main_extruder_on_left{true};
 
+    wxRadioButton*     m_main_dummy_radio{nullptr};
+    wxRadioButton*     m_deputy_dummy_radio{nullptr};
+
     wxBoxSizer* m_multi_extruder_ams_panel_sizer;
     wxBoxSizer *       m_multi_exturder_ams_sizer;
     wxStaticBoxSizer * m_main_sizer;
