@@ -1119,10 +1119,10 @@ void CalibrationPresetPage::manage_filament_radio_btn(ExtruderRole extuder_role)
     // On GTK, SetValue(false) on a single-visible-item radio group is a no-op;
     // activating the hidden dummy transfers the selection away from visible buttons.
     if(extuder_role == ExtruderRole::MAIN_EXTRUDER) {
-        if (m_deputy_dummy_radio)
+        if(m_deputy_dummy_radio)
             m_deputy_dummy_radio->SetValue(true);
     } else if(extuder_role == ExtruderRole::DEPUTY_EXTRUDER) {
-        if (m_main_dummy_radio)
+        if(m_main_dummy_radio)
             m_main_dummy_radio->SetValue(true);
     }
 }
