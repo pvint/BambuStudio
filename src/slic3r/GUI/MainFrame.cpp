@@ -82,6 +82,9 @@
 #include <shellapi.h>
 #include <dwmapi.h>
 #endif // _WIN32
+#ifdef __WXGTK__
+#include <gtk/gtk.h>
+#endif
 #include <slic3r/GUI/CreatePresetsDialog.hpp>
 #include "libslic3r/Log.hpp"
 #include "libslic3r/Utils.hpp"
@@ -834,6 +837,31 @@ DPIFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, BORDERLESS_FRAME_
 
         evt.Skip();
     });
+
+#ifdef __WXGTK__
+    // GTK hands key presses only to the focused widget of this window and drops them if there is none.
+    // Hiding the focused widget clears the focus (e.g. switching tabs, which on GTK doesn't focus the
+    // new page to avoid stealing focus, #3046), so no shortcut worked until something was clicked.
+    // Before such a key press is dispatched, give the focus to the current page, or to the 3D canvas
+    // on Prepare/Preview; the key then reaches it as usual. Key presses only arrive while this window
+    // is active, so this can't steal the focus from other applications.
+    g_signal_connect(GetHandle(), "event", G_CALLBACK(+[](GtkWidget *widget, GdkEvent *event, gpointer data) -> gboolean {
+        if (event->type != GDK_KEY_PRESS)
+            return FALSE;
+        GtkWidget *focus = gtk_window_get_focus(GTK_WINDOW(widget));
+        if (focus != nullptr && gtk_widget_get_mapped(focus))
+            return FALSE;
+        MainFrame *self   = static_cast<MainFrame *>(data);
+        wxWindow  *target = self->m_tabpanel ? self->m_tabpanel->GetCurrentPage() : nullptr;
+        if (target != nullptr && target == self->m_plater) {
+            GLCanvas3D *canvas = self->m_plater->get_current_canvas3D();
+            target = canvas ? (wxWindow *) canvas->get_wxglcanvas() : nullptr;
+        }
+        if (target != nullptr && gtk_widget_get_mapped(GTK_WIDGET(target->GetHandle())))
+            target->SetFocus();
+        return FALSE;
+    }), this);
+#endif
 
     Bind(wxEVT_SHOW, [this](wxShowEvent &evt) {
         DeviceManager *manger = wxGetApp().getDeviceManager();
