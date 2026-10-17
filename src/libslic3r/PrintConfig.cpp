@@ -3740,6 +3740,7 @@ void PrintConfigDef::init_fff_params()
     def->tooltip = L("Line pattern for internal sparse infill");
     def->enum_keys_map = &ConfigOptionEnum<InfillPattern>::get_enum_values();
     def->enum_values.push_back("concentric");
+    def->enum_values.push_back("concentricinsideout");
     def->enum_values.push_back("zig-zag");
     def->enum_values.push_back("grid");
     def->enum_values.push_back("line");
@@ -3762,6 +3763,7 @@ void PrintConfigDef::init_fff_params()
     def->enum_values.push_back("lockedzag");
     def->enum_values.push_back("2dlattice");
     def->enum_labels.push_back(L("Concentric"));
+    def->enum_labels.push_back(L("Concentric (inside-out)"));
     def->enum_labels.push_back(L("Rectilinear"));
     def->enum_labels.push_back(L("Grid"));
     def->enum_labels.push_back(L("Line"));
