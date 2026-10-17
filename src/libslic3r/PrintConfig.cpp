@@ -824,7 +824,8 @@ static t_config_enum_values s_keys_map_InfillPattern {
     { "lockedzag",          ipLockedZag },
     { "2dlattice",          ip2DLattice  },
     { "ironingarchimedeanspiral", ipIroningArchimedeanSpiral },
-    { "globalmonotonicline", ipGlobalMonotonicLine }
+    { "globalmonotonicline", ipGlobalMonotonicLine },
+    { "concentricinsideout", ipConcentricInsideOut }
 };
 CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(InfillPattern)
 
@@ -2899,6 +2900,7 @@ void PrintConfigDef::init_fff_params()
     def->tooltip = L("Line pattern of top surface infill");
     def->enum_keys_map = &ConfigOptionEnum<InfillPattern>::get_enum_values();
     def->enum_values.push_back("concentric");
+    def->enum_values.push_back("concentricinsideout");
     def->enum_values.push_back("zig-zag");
     def->enum_values.push_back("monotonic");
     def->enum_values.push_back("monotonicline");
@@ -2908,6 +2910,7 @@ void PrintConfigDef::init_fff_params()
     def->enum_values.push_back("archimedeanchords");
     def->enum_values.push_back("octagramspiral");
     def->enum_labels.push_back(L("Concentric"));
+    def->enum_labels.push_back(L("Concentric (inside-out)"));
     def->enum_labels.push_back(L("Rectilinear"));
     def->enum_labels.push_back(L("Monotonic"));
     def->enum_labels.push_back(L("Monotonic line"));
