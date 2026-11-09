@@ -404,6 +404,9 @@ static constexpr const char* MESH_SHARED_KEY = "mesh_shared";
 // Assembly view independent-model: stable cross-model logical-part identity.
 static constexpr const char* PART_GUID_KEY = "uuid";
 static constexpr const char* ASSEMBLY_SRC_GUID_KEY = "assembly_src_guid";
+// A cutaway is stored as a modifier marked with this key. Other slicers ignore the unknown key and load the cutaway
+// as a modifier without any settings, which changes nothing, instead of printing it as a solid part.
+static constexpr const char* CUTAWAY_KEY = "cutaway";
 
 static constexpr const char *MESH_STAT_FACE_COUNT           = "face_count";
 static constexpr const char* MESH_STAT_EDGES_FIXED          = "edges_fixed";
@@ -5855,6 +5858,10 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                     volume->set_part_guid(metadata.value);
                 else if (metadata.key == ASSEMBLY_SRC_GUID_KEY)
                     volume->set_assembly_src_guid(metadata.value);
+                else if (metadata.key == CUTAWAY_KEY) {
+                    if (metadata.value == "1")
+                        volume->set_type(ModelVolumeType::CUTAWAY);
+                }
                 else if ((metadata.key == MATRIX_KEY) || (metadata.key == MESH_SHARED_KEY))
                     continue;
                 else
@@ -6014,6 +6021,10 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                     volume->set_part_guid(metadata.value);
                 else if (metadata.key == ASSEMBLY_SRC_GUID_KEY)
                     volume->set_assembly_src_guid(metadata.value);
+                else if (metadata.key == CUTAWAY_KEY) {
+                    if (metadata.value == "1")
+                        volume->set_type(ModelVolumeType::CUTAWAY);
+                }
                 else
                     volume->config.set_deserialize(metadata.key, metadata.value, config_substitutions);
             }
@@ -8663,7 +8674,7 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                                 volume_id = m_volume_paths.find(volume)->second.second;
                             stream << ID_ATTR << "=\"" << volume_id << "\" ";
 
-                            stream << SUBTYPE_ATTR << "=\"" << ModelVolume::type_to_string(volume->type()) << "\"";
+                            stream << SUBTYPE_ATTR << "=\"" << ModelVolume::type_to_string(volume->is_cutaway() ? ModelVolumeType::PARAMETER_MODIFIER : volume->type()) << "\"";
                             if (!volume->part_guid().empty())
                                 stream << " " << PART_GUID_KEY << "=\"" << xml_escape(volume->part_guid()) << "\"";
                             stream << ">\n";
@@ -8673,6 +8684,9 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                             if (!volume->name.empty())
                                 stream << "      <" << METADATA_TAG << " " << KEY_ATTR << "=\"" << NAME_KEY << "\" " << VALUE_ATTR << "=\"" << xml_escape(volume->name) << "\"/>\n";
                                 //stream << "      <" << METADATA_TAG << " " << KEY_ATTR << "=\"" << NAME_KEY << "\" " << VALUE_ATTR << "=\"" << xml_escape(volume->name) << "\"/>\n";
+
+                            if (volume->is_cutaway())
+                                stream << "      <" << METADATA_TAG << " " << KEY_ATTR << "=\"" << CUTAWAY_KEY << "\" " << VALUE_ATTR << "=\"1\"/>\n";
 
                             // stores volume's modifier field (legacy, to support old slicers)
                             /*if (volume->is_modifier())
@@ -8715,9 +8729,11 @@ void PlateData::parse_filament_info(GCodeProcessorResult *result)
                             }
 
                             // stores volume's config data
-                            for (const std::string& key : volume->config.keys()) {
-                                stream << "      <" << METADATA_TAG << " "<< KEY_ATTR << "=\"" << key << "\" " << VALUE_ATTR << "=\"" << volume->config.opt_serialize(key) << "\"/>\n";
-                            }
+                            // A cutaway has no settings of its own. Leave them out, so that the modifier it loads as elsewhere changes nothing.
+                            if (!volume->is_cutaway())
+                                for (const std::string& key : volume->config.keys()) {
+                                    stream << "      <" << METADATA_TAG << " "<< KEY_ATTR << "=\"" << key << "\" " << VALUE_ATTR << "=\"" << volume->config.opt_serialize(key) << "\"/>\n";
+                                }
 
                             if (const std::optional<EmbossShape> &es = volume->emboss_shape; es.has_value()) {
                                 to_xml(stream, *es, *volume, archive, m_fullpath_sources);

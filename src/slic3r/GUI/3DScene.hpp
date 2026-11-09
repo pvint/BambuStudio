@@ -303,6 +303,7 @@ public:
     static std::array<float, 4> MODEL_NEGTIVE_COL;
     static std::array<float, 4> SUPPORT_ENFORCER_COL;
     static std::array<float, 4> SUPPORT_BLOCKER_COL;
+    static std::array<float, 4> CUTAWAY_COL;
     static std::array<float, 4> MODEL_HIDDEN_COL;
 
     static void update_render_colors();

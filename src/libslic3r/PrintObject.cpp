@@ -3,6 +3,7 @@
 #include "Print.hpp"
 #include "BoundingBox.hpp"
 #include "ClipperUtils.hpp"
+#include "Cutaway.hpp"
 #include "ElephantFootCompensation.hpp"
 #include "Geometry.hpp"
 #include "I18N.hpp"
@@ -642,6 +643,7 @@ void PrintObject::make_perimeters()
         m_print->throw_if_canceled();
         BOOST_LOG_TRIVIAL(debug) << "Recrod cooling_node id for each extrusion in parallel - end";
     }
+    this->apply_cutaways(true);
     this->set_done(posPerimeters);
 
     if (record_wall_time)
@@ -1238,6 +1240,7 @@ void PrintObject::infill()
         /*  we could free memory now, but this would make this step not idempotent
         ### $_->fill_surfaces->clear for map @{$_->regions}, @{$object->layers};
         */
+        this->apply_cutaways(false);
         this->set_done(posInfill);
 
         if (record_infill_generate_time)
@@ -1262,8 +1265,35 @@ void PrintObject::ironing()
         );
         m_print->throw_if_canceled();
         BOOST_LOG_TRIVIAL(debug) << "Ironing in parallel - end";
+        // Ironing is added to the fills, which are already clipped. Clipping them again is a no-op.
+        this->apply_cutaways(false);
         this->set_done(posIroning);
     }
+}
+
+void PrintObject::apply_cutaways(bool perimeters)
+{
+    const std::vector<Polygons> cutaways = this->slice_cutaways();
+    if (cutaways.empty())
+        return;
+    BOOST_LOG_TRIVIAL(debug) << "Applying cutaways to " << (perimeters ? "walls" : "infill") << " in parallel - start";
+    tbb::parallel_for(
+        tbb::blocked_range<size_t>(0, m_layers.size()),
+        [this, &cutaways, perimeters](const tbb::blocked_range<size_t>& range) {
+            for (size_t layer_idx = range.begin(); layer_idx < range.end(); ++ layer_idx) {
+                m_print->throw_if_canceled();
+                if (cutaways[layer_idx].empty())
+                    continue;
+                for (LayerRegion *layerm : m_layers[layer_idx]->regions()) {
+                    // Clip the centerlines half an extrusion width outside of the cutaway, so that the opening matches its shape.
+                    const Polygons mask = offset(cutaways[layer_idx], 0.5f * float(layerm->flow(frExternalPerimeter).scaled_width()));
+                    clip_extrusions_by_cutaway(perimeters ? layerm->perimeters : layerm->fills, mask);
+                }
+            }
+        }
+    );
+    m_print->throw_if_canceled();
+    BOOST_LOG_TRIVIAL(debug) << "Applying cutaways in parallel - end";
 }
 
 // BBS
