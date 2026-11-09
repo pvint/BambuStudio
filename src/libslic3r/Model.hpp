@@ -334,7 +334,10 @@ enum class ModelVolumeType : int {
     NEGATIVE_VOLUME,
     PARAMETER_MODIFIER,
     SUPPORT_BLOCKER,
-    SUPPORT_ENFORCER
+    SUPPORT_ENFORCER,
+    // Removes what would be extruded inside of it like a negative volume, but leaves the cut open instead of walling it off.
+    // Appended last, as the GUI indexes its icons by the type.
+    CUTAWAY
 };
 
 enum class ModelObjectCutAttribute : int { KeepUpper, KeepLower, FlipUpper, FlipLower, PlaceOnCutUpper, PlaceOnCutLower, CreateDowels, CutToParts, InvalidateCutInfo };
@@ -1031,6 +1034,7 @@ public:
 	bool                is_support_enforcer()   const { return m_type == ModelVolumeType::SUPPORT_ENFORCER; }
 	bool                is_support_blocker()    const { return m_type == ModelVolumeType::SUPPORT_BLOCKER; }
 	bool                is_support_modifier()   const { return m_type == ModelVolumeType::SUPPORT_BLOCKER || m_type == ModelVolumeType::SUPPORT_ENFORCER; }
+    bool                is_cutaway()            const { return m_type == ModelVolumeType::CUTAWAY; }
     bool                is_svg() const { return emboss_shape.has_value(); }
     bool                is_the_only_one_part() const; // behave like an object
     t_model_material_id material_id() const { return m_material_id; }

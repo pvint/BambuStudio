@@ -1586,7 +1586,7 @@ bool ModelObject::is_fuzzy_skin_painted() const
 
 void ModelObject::sort_volumes(bool full_sort)
 {
-    // sort volumes inside the object to order "Model Part, Negative Volume, Modifier, Support Blocker and Support Enforcer. "
+    // sort volumes inside the object to order "Model Part, Negative Volume, Modifier, Support Blocker, Support Enforcer and Cutaway. "
     if (full_sort)
         std::stable_sort(volumes.begin(), volumes.end(), [](ModelVolume* vl, ModelVolume* vr) {
             return vl->type() < vr->type();
@@ -3418,7 +3418,8 @@ std::vector<int> ModelVolume::get_extruders(const GlobalFeatureFilaments &global
     if (m_type == ModelVolumeType::INVALID
         || m_type == ModelVolumeType::NEGATIVE_VOLUME
         || m_type == ModelVolumeType::SUPPORT_BLOCKER
-        || m_type == ModelVolumeType::SUPPORT_ENFORCER)
+        || m_type == ModelVolumeType::SUPPORT_ENFORCER
+        || m_type == ModelVolumeType::CUTAWAY)
         return std::vector<int>();
 
     if (mmu_segmentation_facets.timestamp() != mmuseg_ts) {
@@ -3676,6 +3677,8 @@ ModelVolumeType ModelVolume::type_from_string(const std::string &s)
 		return ModelVolumeType::SUPPORT_ENFORCER;
     if (s == "support_blocker")
 		return ModelVolumeType::SUPPORT_BLOCKER;
+    if (s == "cutaway")
+        return ModelVolumeType::CUTAWAY;
     //assert(s == "0");
     // Default value if invalud type string received.
 	return ModelVolumeType::MODEL_PART;
@@ -3690,6 +3693,7 @@ std::string ModelVolume::type_to_string(const ModelVolumeType t)
 	case ModelVolumeType::PARAMETER_MODIFIER: return "modifier_part";
 	case ModelVolumeType::SUPPORT_ENFORCER:   return "support_enforcer";
 	case ModelVolumeType::SUPPORT_BLOCKER:    return "support_blocker";
+    case ModelVolumeType::CUTAWAY:            return "cutaway";
     default:
         assert(false);
         return "normal_part";

@@ -543,6 +543,7 @@ public:
     std::vector<Polygons>       slice_support_volumes(const ModelVolumeType model_volume_type) const;
     std::vector<Polygons>       slice_support_blockers() const { return this->slice_support_volumes(ModelVolumeType::SUPPORT_BLOCKER); }
     std::vector<Polygons>       slice_support_enforcers() const { return this->slice_support_volumes(ModelVolumeType::SUPPORT_ENFORCER); }
+    std::vector<Polygons>       slice_cutaways() const { return this->slice_support_volumes(ModelVolumeType::CUTAWAY); }
 
     // Helpers to project custom facets on slices
     void project_and_append_custom_facets(bool seam, EnforcerBlockerType type, std::vector<Polygons>& expolys, std::vector<std::pair<Vec3f,Vec3f>>* vertical_points=nullptr) const;
@@ -612,6 +613,8 @@ private:
     void prepare_infill();
     void infill();
     void ironing();
+    // Removes the walls (perimeters == true) or the infill and ironing (perimeters == false) inside of the cutaways.
+    void apply_cutaways(bool perimeters);
     void generate_support_material();
     void simplify_extrusion_path();
 
