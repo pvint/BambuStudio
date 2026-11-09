@@ -426,6 +426,7 @@ std::array<float, 4> GLVolume::MODEL_MIDIFIER_COL   = {1.0f, 1.0f, 0.0f, 0.6f};
 std::array<float, 4> GLVolume::MODEL_NEGTIVE_COL    = {0.3f, 0.3f, 0.3f, 0.4f};
 std::array<float, 4> GLVolume::SUPPORT_ENFORCER_COL = {0.3f, 0.3f, 1.0f, 0.4f};
 std::array<float, 4> GLVolume::SUPPORT_BLOCKER_COL  = {1.0f, 0.3f, 0.3f, 0.4f};
+std::array<float, 4> GLVolume::CUTAWAY_COL          = {1.0f, 0.6f, 0.1f, 0.4f};
 
 std::array<float, 4> GLVolume::MODEL_HIDDEN_COL  = {0.f, 0.f, 0.f, 0.3f};
 
@@ -645,6 +646,9 @@ std::array<float, 4> color_from_model_volume(const ModelVolume& model_volume)
     }
     else if (model_volume.is_support_enforcer()) {
         return GLVolume::SUPPORT_ENFORCER_COL;
+    }
+    else if (model_volume.is_cutaway()) {
+        return GLVolume::CUTAWAY_COL;
     }
     return color;
 }
