@@ -4297,7 +4297,8 @@ wxDataViewItem ObjectList::add_settings_item(wxDataViewItem parent_item, const D
     const bool is_layer_settings = m_objects_model->GetItemType(parent_item) == itLayer;
     if (!is_object_settings) {
         ModelVolumeType volume_type = m_objects_model->GetVolumeType(parent_item);
-        if (volume_type == ModelVolumeType::NEGATIVE_VOLUME || volume_type == ModelVolumeType::SUPPORT_BLOCKER || volume_type == ModelVolumeType::SUPPORT_ENFORCER)
+        if (volume_type == ModelVolumeType::NEGATIVE_VOLUME || volume_type == ModelVolumeType::SUPPORT_BLOCKER || volume_type == ModelVolumeType::SUPPORT_ENFORCER ||
+            volume_type == ModelVolumeType::CUTAWAY)
             return ret;
     }
 
@@ -6140,6 +6141,8 @@ void ObjectList::change_part_type()
             if (!volume->is_svg()) {
                 types.push_back(ModelVolumeType::SUPPORT_BLOCKER);
                 types.push_back(ModelVolumeType::SUPPORT_ENFORCER);
+                if (!volume->is_text())
+                    types.push_back(ModelVolumeType::CUTAWAY);
             }
         }
         return types;
@@ -6167,6 +6170,7 @@ void ObjectList::change_part_type()
 
     add_option(ModelVolumeType::MODEL_PART, _L("Part"));
     add_option(ModelVolumeType::NEGATIVE_VOLUME, _L("Negative Part"));
+    add_option(ModelVolumeType::CUTAWAY, _L("Cutaway"));
     add_option(ModelVolumeType::PARAMETER_MODIFIER, _L("Modifier"));
     add_option(ModelVolumeType::SUPPORT_BLOCKER, _L("Support Blocker"));
     add_option(ModelVolumeType::SUPPORT_ENFORCER, _L("Support Enforcer"));
@@ -6319,6 +6323,12 @@ void ObjectList::set_volume_type(ModelVolumeType new_type)
         if (volumes.empty())
             return;
     }
+
+    // The object list has no cutaway icons for text and SVG volumes, and cut connectors have to stay solid or negative.
+    if (new_type == ModelVolumeType::CUTAWAY)
+        volumes.erase(std::remove_if(volumes.begin(), volumes.end(), [](const VolumeSelection& sel) {
+            return sel.volume->is_text() || sel.volume->is_svg() || sel.volume->is_cut_connector();
+        }), volumes.end());
 
     const bool any_diff = std::any_of(volumes.begin(), volumes.end(),
         [new_type](const VolumeSelection& sel) { return sel.volume->type() != new_type; });

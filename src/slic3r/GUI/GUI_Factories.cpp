@@ -293,7 +293,8 @@ static const std::vector<std::pair<std::string, std::string>> ADD_VOLUME_MENU_IT
         {L("Add negative part"),     "menu_add_negative" },       // ~ModelVolumeType::NEGATIVE_VOLUME
         {L("Add modifier"),          "menu_add_modifier"},         // ~ModelVolumeType::PARAMETER_MODIFIER
         {L("Add support blocker"),   "menu_support_blocker"},     // ~ModelVolumeType::SUPPORT_BLOCKER
-        {L("Add support enforcer"),  "menu_support_enforcer"}     // ~ModelVolumeType::SUPPORT_ENFORCER
+        {L("Add support enforcer"),  "menu_support_enforcer"},    // ~ModelVolumeType::SUPPORT_ENFORCER
+        {L("Add cutaway"),           "menu_add_cutaway"}          // ~ModelVolumeType::CUTAWAY
 };
 
 // Note: id accords to type of the sub-object (adding volume), so sequence of the menu items is important
@@ -678,11 +679,13 @@ void MenuFactory::append_menu_items_add_volume(wxMenu* menu)
             menu->Destroy(settings_id);
     }
 
-    for (size_t type = 0; type < ADD_VOLUME_MENU_ITEMS.size(); type++)
+    // A cutaway is listed next to the negative part it resembles.
+    for (ModelVolumeType type : { ModelVolumeType::MODEL_PART, ModelVolumeType::NEGATIVE_VOLUME, ModelVolumeType::CUTAWAY,
+                                  ModelVolumeType::PARAMETER_MODIFIER, ModelVolumeType::SUPPORT_BLOCKER, ModelVolumeType::SUPPORT_ENFORCER })
     {
-        auto& item = ADD_VOLUME_MENU_ITEMS[type];
+        auto& item = ADD_VOLUME_MENU_ITEMS[int(type)];
 
-        wxMenu* sub_menu = append_submenu_add_generic(menu, ModelVolumeType(type));
+        wxMenu* sub_menu = append_submenu_add_generic(menu, type);
         append_submenu(menu, sub_menu, wxID_ANY, _(item.first), "", item.second,
             []() { return obj_list()->is_instance_or_object_selected(); }, m_parent);
     }
@@ -792,6 +795,7 @@ wxMenuItem* MenuFactory::append_menu_item_change_type(wxMenu* menu)
     std::vector<TypeInfo> types = {
         { ModelVolumeType::MODEL_PART,         _L("Part") },
         { ModelVolumeType::NEGATIVE_VOLUME,    _L("Negative Part") },
+        { ModelVolumeType::CUTAWAY,            _L("Cutaway") },
         { ModelVolumeType::PARAMETER_MODIFIER, _L("Modifier") },
         { ModelVolumeType::SUPPORT_BLOCKER,    _L("Support Blocker") },
         { ModelVolumeType::SUPPORT_ENFORCER,   _L("Support Enforcer") }
