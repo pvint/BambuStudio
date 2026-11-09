@@ -14,6 +14,7 @@
 #include "FillLightning.hpp"
 #include "FillConcentricInternal.hpp"
 #include "FillConcentric.hpp"
+#include "FillConcentricInsideOut.hpp"
 #include "FillFloatingConcentric.hpp"
 
 #define NARROW_INFILL_AREA_THRESHOLD 3
@@ -714,11 +715,22 @@ void Layer::make_fills(FillAdaptive::Octree* adaptive_fill_octree, FillAdaptive:
             assert(fill_concentric != nullptr);
             fill_concentric->print_config        = &this->object()->print()->config();
             fill_concentric->print_object_config = &this->object()->config();
-        } else if (surface_fill.params.pattern == ipConcentric) {
+        } else if (surface_fill.params.pattern == ipConcentric || surface_fill.params.pattern == ipConcentricInsideOut) {
             FillConcentric *fill_concentric = dynamic_cast<FillConcentric *>(f.get());
             assert(fill_concentric != nullptr);
             fill_concentric->print_config = &this->object()->print()->config();
             fill_concentric->print_object_config = &this->object()->config();
+            if (FillConcentricInsideOut *fill_inside_out = dynamic_cast<FillConcentricInsideOut *>(f.get())) {
+                // The loops grow from the other regions on this layer, not from the outline of the object.
+                fill_inside_out->object_slices = &this->lslices;
+                ExPolygons land;
+                for (size_t region_id = 0; region_id < m_regions.size(); ++ region_id)
+                    if (region_id != surface_fill.region_id &&
+                        std::find(surface_fill.region_id_group.begin(), surface_fill.region_id_group.end(), region_id) == surface_fill.region_id_group.end())
+                        for (const Surface &surface : m_regions[region_id]->slices.surfaces)
+                            land.emplace_back(surface.expolygon);
+                fill_inside_out->land = union_ex(land);
+            }
         } else if (surface_fill.params.pattern == ipLightning){
             dynamic_cast<FillLightning::Filler*>(f.get())->generator = lightning_generator;
 		}
@@ -794,7 +806,7 @@ void Layer::make_fills(FillAdaptive::Octree* adaptive_fill_octree, FillAdaptive:
         params.anchor_length     = surface_fill.params.anchor_length;
 		params.anchor_length_max = surface_fill.params.anchor_length_max;
 		params.resolution        = resolution;
-		params.use_arachne = surface_fill.params.pattern == ipConcentric || surface_fill.params.pattern == ipFloatingConcentric;
+		params.use_arachne = surface_fill.params.pattern == ipConcentric || surface_fill.params.pattern == ipConcentricInsideOut || surface_fill.params.pattern == ipFloatingConcentric;
 		params.layer_height      = m_regions[surface_fill.region_id]->layer()->height;
 
 		// BBS
@@ -896,6 +908,7 @@ Polylines Layer::generate_sparse_infill_polylines_for_anchoring(FillAdaptive::Oc
         case ipCubic:
         case ipLine:
         case ipConcentric:
+        case ipConcentricInsideOut:
         case ipHoneycomb:
         case ip3DHoneycomb:
         case ipGyroid:
