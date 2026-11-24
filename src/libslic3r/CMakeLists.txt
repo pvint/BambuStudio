@@ -81,6 +81,8 @@ set(lisbslic3r_sources
     Config.hpp
     CurveAnalyzer.cpp
     CurveAnalyzer.hpp
+    Cutaway.cpp
+    Cutaway.hpp
     CutUtils.cpp
     CutUtils.hpp
     PaintReproject.cpp
