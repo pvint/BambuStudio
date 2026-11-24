@@ -107,8 +107,12 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 if((REV_PARSE_RESULT EQUAL 0) AND (REV_PARSE_OUTPUT STREQUAL "true"))
-    # Find relative path from root to source used for adjusting patch command
-    file(RELATIVE_PATH BINARY_DIR_REL  ${CMAKE_SOURCE_DIR}/.. ${CMAKE_BINARY_DIR})
+    # Find relative path from root to source used for adjusting patch command.
+    # Resolve symlinks first: if the source dir was reached through a symlink,
+    # the relative path climbs out of the repo and git apply rejects it.
+    get_filename_component(_repo_root_real ${CMAKE_SOURCE_DIR}/.. REALPATH)
+    get_filename_component(_binary_dir_real ${CMAKE_BINARY_DIR} REALPATH)
+    file(RELATIVE_PATH BINARY_DIR_REL ${_repo_root_real} ${_binary_dir_real})
 endif ()
 
 function(bambustudio_add_cmake_project projectname)
